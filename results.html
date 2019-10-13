@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<meta name="author" content="Sujay S. Phadke">
+	<meta name="copyright" content="">
+	<meta name="url" content="https://github.com/electronicsguy">
+	<meta name="description" content="TurboGV: Google Visualization HTML Creator">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title></title>
+	
+	<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+	<style>
+		rect {
+			stroke: white;
+			stroke-width: 1;
+		}
+		.myTooltipClass {
+			background: #fd9;
+			padding: 10px;
+			border-style: solid;
+			border-width: 2px;
+			border-color: red;
+			border-radius: 5px;
+		}
+		.mySpanClass {
+			font-family: Courier;
+			color: blue
+		}
+		.preloaderClass {
+						background: #fd9;
+						border-width: 2px;
+						border-color: red;
+			font-size: 50px;
+			text-align: center;
+			vertical-align: middle;
+		}
+		.selectClass {
+			font-weight: bold;
+			padding: 5px;
+			/* color: red; */
+		}
+		.headerClass {
+			position: top;
+		}
+		.titleClass { 
+            font-family: Arial;
+			font-weight: bold;
+            color: #E42D05;
+            margin-left: 20px;
+			text-align: left;
+			display: inline-block;
+			margin-bottom: 5px;
+        }
+		.descClass { 
+            font-family: Arial;
+			font-weight: normal;
+            color: #009900;
+            margin-left: 20px;
+			text-align: left;
+			display: inline-block;
+			margin-bottom: 20px;
+        }
+		.myButton {
+			background-color: #4CAF50; /* Green */
+			border: none;
+			color: white;
+			padding: 5px;
+			text-align: center;
+			text-decoration: none;
+			display: inline-block;
+			font-size: 15px;
+			margin: 4px 2px;
+			cursor: pointer;
+			border-radius: 12px;
+		}
+	</style>
+</head>    
+
+<body>		
+	<script type='text/javascript'>
+		google.charts.load('current', {'packages': ['treemap', 'corechart'], callback: Main});
+		
+		var numCharts;
+		var chartTypes = [];
+		var chartHandle = [];
+		var dataArr = [];
+		
+		var data = [];
+		var columnOptions;
+		var options = [];
+		var chart = [];
+		
+		
+		function Main() {
+			Init();
+			CreateChartDivs();				
+			DrawChart();
+			CustomizeCharts();
+		}
+		
+		function Init() {
+			SetRawData();
+		}
+		
+		function CreateChartDivs() {
+			
+			var main_title = document.createElement('div');
+			main_title.id = 'main_title';
+			main_title.class = 'headerClass';
+			main_title.style.paddingBottom = '2px';
+			main_title.innerHTML = VisualizationData.formattedTitle;
+			document.body.appendChild(main_title);
+			
+			var main_desc = document.createElement('div');
+			main_desc.id = 'main_desc';
+			main_desc.style.paddingBottom = '50px';
+			main_desc.innerHTML = VisualizationData.desc;
+			document.body.appendChild(main_desc);
+			
+			for (i=0; i<numCharts; i++) {
+				var div_outer = document.createElement('div');
+				div_outer.id = 'chart_div_outer' + i;
+				
+				var div1 = document.createElement('div');
+				div1.id = 'chart_div' + i;
+				div1.style.width = '900px';
+				div1.style.height = '500px';
+				
+				var div2 = document.createElement('div');
+				div2.className = 'preloaderClass';
+				div2.innerHTML = 'Loading Chart...';
+				div2.id = 'inner_div' + i;
+				
+				div1.appendChild(div2);
+				div_outer.appendChild(div1);
+				
+				document.body.appendChild(div_outer);
+				
+				chartHandle[i] = div1.id;
+				
+				// Draw horizontal line
+				var hr = document.createElement('hr');
+				document.body.appendChild(hr); 
+				
+			}
+		}
+		
+		
+		function SetOptions() {
+			for (i=0; i<numCharts; i++) {
+				options[i] = VisualizationData.graphs[i]['options'];				
+			}
+		}
+		
+		function SetRawData() {
+		
+			if ((typeof VisualizationData === 'undefined') || (VisualizationData === null)) {
+				alert('No Charts found!');
+				numCharts = 0;
+				VisualizationData = { 'title': 'No charts found!' };
+				return;
+			}
+			
+			document.title = VisualizationData.title;
+			numCharts = VisualizationData.numCharts;
+			
+			for (i=0; i<numCharts; i++) {
+				try{
+					chartTypes[i] = VisualizationData.graphs[i].chartType;
+					dataArr[i] = VisualizationData.graphs[i].data;
+				}
+				catch(err){
+					console.log('Error while setting chart properties. Perhaps wrong chart index: ' + i)
+					console.log(err.message)
+				}
+			}
+		}
+		
+		function DrawChart() {				
+			// Create and populate the data table
+			for (i=0; i<numCharts; i++) {
+				try{
+					data[i] = google.visualization.arrayToDataTable(dataArr[i]);
+				}
+				catch(err){
+					console.log('Error in converting datatable for chart: ' + String(i))
+					console.log('Chart title: ' + String(VisualizationData.graphs[i]['options']['title']))
+					console.log('Check input data format')
+					console.log(err.str)
+				}
+			}
+			
+			SetOptions();
+			
+			// Create and draw the visualization
+			for (i=0; i<numCharts; i++) {
+				try{
+					chart[i] = new google.visualization[chartTypes[i]](document.getElementById(chartHandle[i]));
+					chart[i].draw(data[i], options[i]);
+				}
+				catch(err){
+					h = document.getElementById(chartHandle[i])
+					h.innerHTML='Error creating Google Visualization. Could be incorrect chart type: ' + chartTypes[i] + '<br />' + 'Error message: ' + err.message
+				}
+			}
+		}
+		
+		function CustomizeCharts() {
+			for (i=0; i<numCharts; i++) {
+				if (VisualizationData.graphs[i].OnReadyHandler) {
+					console.log('On ready, calling customize on graph: ' + i);
+					google.visualization.events.addListener(chart[i], 'ready', VisualizationData.graphs[i].OnReadyHandler);
+				}
+			}
+			
+			/*for (i=0; i<numCharts; i++) {
+				var e = document.getElementById('chart_div_outer' + i)
+				var btn = document.createElement("BUTTON");
+				btn.innerHTML = "Download SVG";
+				btn.setAttribute("onclick", "CreateSVG(" + i + ")");
+				btn.className = 'myButton';
+				e.appendChild(btn);
+			}*/
+			
+		}
+		
+		
+		function CreateSVG(id){
+			var e = document.getElementById('chart_div' + id);
+			var s = e.getElementsByTagName('svg')[0].outerHTML;
+			var s_svg = s.replace(/svg width/, 'svg xmlns="http://www.w3.org/2000/svg" width');
+			
+			var element = document.createElement('a');
+			element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(s_svg));
+			element.setAttribute('download', 'chart' + id + '.svg');
+
+			element.style.display = 'none';
+			document.body.appendChild(element);
+
+			element.click();
+			document.body.removeChild(element);			
+		}
+
+		
+	</script>	
+
+	<script type='text/javascript'>				  	
+									
+        // Generic Functions
+        function TransformSuperSub(text){				
+            // Superscript or subscript follows Latex convention with forced curly-braces
+            temp1 = text.replace(/\^{(.*?)}/g, "<tspan baseline-shift='super'>$1</tspan>");
+            temp2 = temp1.replace(/\_{(.*?)}/g, "<tspan baseline-shift='sub'>$1</tspan>");
+            return temp2;
+        }
+
+        function TransformScientific(text){				
+            // Convert 10E5 to 10*(10^5)  or 10E-5 to 10*(10^-5)
+            temp1 = text.replace(/[Ee]([+-]?\d+)/g, "x10<tspan baseline-shift='super'>$1</tspan>");
+            return temp1;
+        }
+
+        function LimitPrecision(f) {
+            return parseFloat(f).toFixed(1);
+        }
+        														// Charts data
+							var VisualizationData = {};
+							VisualizationData.title = "TurboGV Example Script";
+							VisualizationData.formattedTitle = "<span class='titleClass' >TurboGV Example Script</span>";
+							VisualizationData.desc = "<span class='descClass' >Create Google Visualization Charts from raw data in Python<br />View in a web browser. Supports downloading the charts in SVG format.<br />			Note: The data for these charts is taken from: https://developers.google.com/chart/interactive/docs</span>";
+							VisualizationData.numCharts = 6;
+
+							VisualizationData.graphs = [];
+
+		VisualizationData.graphs[0] = {};
+		VisualizationData.graphs[0]['chartType'] = 'ColumnChart';
+		VisualizationData.graphs[0]['options'] = {"titleTextStyle": {"color": "red", "fontSize": "16"}, "tooltip": {"textStyle": {"fontName": "Arial", "fontSize": 10, "color": "black"}, "showColorCode": "true"}, "fontColor": "black", "legend": {"position": "none", "alignment": "center", "textStyle": {"fontSize": "10"}}, "headerHeight": 25, "headerColor": "#d1f9f8", "theme": "material", "title": "Density of Precious Metals, in g/cm^{3}. (This title contains ^{superscript} and _{subscript})", "hAxis": {"title": "Metal"}, "vAxis": {"title": "Density (g/cm^{3})"}};
+		VisualizationData.graphs[0]['data'] = [
+			['Element', 'Density', {'role': 'style'}],
+		['Copper', 8.94, '#b87333'],
+		['Silver', 10.49, 'silver'],
+		['Gold', 19.3, 'gold'],
+		['Platinum', 21.45, 'color: #e5e4e2'],
+
+		];
+
+        VisualizationData.graphs[0].OnReadyHandler = function(){
+            
+            e = document.getElementById(chartHandle[0]);
+            labels = e.getElementsByTagName('text');
+            [...labels].forEach(function(label, i) {
+                label.innerHTML = TransformSuperSub(label.innerHTML);
+                label.innerHTML = TransformScientific(label.innerHTML);
+            })
+        
+            
+            var e = document.getElementById('chart_div' + 0)
+            var f = e.parentElement;
+            var btn = document.createElement("BUTTON");
+            btn.innerHTML = "Download SVG";
+            btn.setAttribute("onclick", "CreateSVG(" + 0 + ")");
+            btn.className = 'myButton';
+            f.appendChild(btn);
+        
+        };
+        
+
+		VisualizationData.graphs[1] = {};
+		VisualizationData.graphs[1]['chartType'] = 'TreeMap';
+		VisualizationData.graphs[1]['options'] = {"titleTextStyle": {"color": "red", "fontSize": "16"}, "tooltip": {"textStyle": {"fontName": "Arial", "fontSize": 10, "color": "black"}, "showColorCode": "true"}, "fontColor": "black", "legend": {"position": "none", "alignment": "center", "textStyle": {"fontSize": "10"}}, "headerHeight": 25, "headerColor": "#d1f9f8", "theme": "material", "minColor": "#009688", "midColor": "#f7f7f7f", "maxColor": "#ee8100", "showScale": "true", "highlightOnMouseOver": "true", "hintOpacity": 1, "maxPostDepth": 1, "generateTooltip": Tooltip1, "useWeightedAverageForAggregation": "true", "title": "Treemap"};
+		VisualizationData.graphs[1]['data'] = [
+			[{'v': 'Location', 'f': 'Location'}, 'Parent', 'Market trade volume (size)'],
+		[{'v': 'Global', 'f': 'Global'}, null, 0],
+		[{'v': 'America', 'f': 'America'}, 'Global', 0],
+		[{'v': 'Europe', 'f': 'Europe'}, 'Global', 0],
+		[{'v': 'Asia', 'f': 'Asia'}, 'Global', 0],
+		[{'v': 'Australia', 'f': 'Australia'}, 'Global', 0],
+		[{'v': 'Africa', 'f': 'Africa'}, 'Global', 0],
+		[{'v': 'Brazil_9049_9741', 'f': 'Brazil'}, 'America', 11],
+		[{'v': 'USA_8117_3389', 'f': 'USA'}, 'America', 52],
+		[{'v': 'Mexico_2802_7237', 'f': 'Mexico'}, 'America', 24],
+		[{'v': 'Canada_9753_2892', 'f': 'Canada'}, 'America', 16],
+		[{'v': 'France_7560_2311', 'f': 'France'}, 'Europe', 42],
+		[{'v': 'Germany_6233_5450', 'f': 'Germany'}, 'Europe', 31],
+		[{'v': 'Sweden_6223_7259', 'f': 'Sweden'}, 'Europe', 22],
+		[{'v': 'Italy_5038_4273', 'f': 'Italy'}, 'Europe', 17],
+		[{'v': 'UK_5450_3774', 'f': 'UK'}, 'Europe', 21],
+		[{'v': 'China_5834_7337', 'f': 'China'}, 'Asia', 36],
+		[{'v': 'Japan_9977_8358', 'f': 'Japan'}, 'Asia', 20],
+		[{'v': 'India_4835_4824', 'f': 'India'}, 'Asia', 40],
+		[{'v': 'Laos_5079_543', 'f': 'Laos'}, 'Asia', 4],
+		[{'v': 'Mongolia_7257_3592', 'f': 'Mongolia'}, 'Asia', 1],
+		[{'v': 'Israel_4630_6553', 'f': 'Israel'}, 'Asia', 12],
+		[{'v': 'Iran_1930_9291', 'f': 'Iran'}, 'Asia', 18],
+		[{'v': 'Pakistan_3230_6959', 'f': 'Pakistan'}, 'Asia', 11],
+		[{'v': 'Egypt_8073_4865', 'f': 'Egypt'}, 'Africa', 21],
+		[{'v': 'S. Africa_606_8804', 'f': 'S. Africa'}, 'Africa', 30],
+		[{'v': 'Sudan_35_8459', 'f': 'Sudan'}, 'Africa', 12],
+		[{'v': 'Congo_4901_3662', 'f': 'Congo'}, 'Africa', 10],
+		[{'v': 'Zaire_3496_7726', 'f': 'Zaire'}, 'Africa', 8],
+
+		];
+
+        VisualizationData.graphs[1].OnReadyHandler = function(){
+            
+            
+        };
+        		
+        function Tooltip1(row, size) {
+            var size_f = LimitPrecision(size);
+            return '<div class="myTooltipClass">' + '<span class="mySpanClass"><b>' + data[1].getFormattedValue(row, 0) + ': ' + size_f + '</b>' + ' </div>';
+        }
+        
+
+		VisualizationData.graphs[2] = {};
+		VisualizationData.graphs[2]['chartType'] = 'ScatterChart';
+		VisualizationData.graphs[2]['options'] = {"titleTextStyle": {"color": "red", "fontSize": "16"}, "tooltip": {"textStyle": {"fontName": "Arial", "fontSize": 10, "color": "black"}, "showColorCode": "true"}, "fontColor": "black", "legend": {"position": "none", "alignment": "center", "textStyle": {"fontSize": "10"}}, "headerHeight": 25, "headerColor": "#d1f9f8", "theme": "material", "pointSize": 5, "series": {"0": {"pointShape": "circle"}, "1": {"pointShape": "diamond"}, "2": {"pointShape": "square"}, "3": {"pointShape": "triangle"}, "4": {"pointShape": "star"}, "5": {"pointShape": "polygon"}}, "title": "Age vs. Weight comparison", "hAxis": {"title": "Age"}, "vAxis": {"title": "Weight"}};
+		VisualizationData.graphs[2]['data'] = [
+			['Age', 'Weight'],
+		[8, 12],
+		[4, 5.5],
+		[11, 14],
+		[4, 5],
+		[3, 3.5],
+		[6.5, 7],
+
+		];
+
+        VisualizationData.graphs[2].OnReadyHandler = function(){
+            
+            
+        };
+        
+
+		VisualizationData.graphs[3] = {};
+		VisualizationData.graphs[3]['chartType'] = 'ColumnChart';
+		VisualizationData.graphs[3]['options'] = {"titleTextStyle": {"color": "red", "fontSize": "16"}, "tooltip": {"textStyle": {"fontName": "Arial", "fontSize": 10, "color": "black"}, "showColorCode": "true"}, "fontColor": "black", "legend": {"position": "top", "alignment": "center"}, "headerHeight": 25, "headerColor": "#d1f9f8", "theme": "material", "isStacked": "true", "title": "Motivation and Energy Level Throughout the Day", "hAxis": {"title": "Time of Day"}, "vAxis": {"title": "Rating (scale of 1-10)"}};
+		VisualizationData.graphs[3]['data'] = [
+			['Time of Day', 'Motivation Level', 'Energy Level'],
+		[{'v': [8, 0, 0], 'f': '8 am'}, 1, 0.25],
+		[{'v': [9, 0, 0], 'f': '9 am'}, 2, 0.5],
+		[{'v': [10, 0, 0], 'f': '10 am'}, 3, 1],
+		[{'v': [11, 0, 0], 'f': '11 am'}, 4, 2.25],
+		[{'v': [12, 0, 0], 'f': '12 pm'}, 5, 2.25],
+		[{'v': [13, 0, 0], 'f': '1 pm'}, 6, 3],
+		[{'v': [14, 0, 0], 'f': '2 pm'}, 7, 4],
+		[{'v': [15, 0, 0], 'f': '3 pm'}, 8, 5.25],
+		[{'v': [16, 0, 0], 'f': '4 pm'}, 9, 7.5],
+		[{'v': [17, 0, 0], 'f': '5 pm'}, 10, 10],
+
+		];
+
+        VisualizationData.graphs[3].OnReadyHandler = function(){
+            
+            
+        };
+        
+
+		VisualizationData.graphs[4] = {};
+		VisualizationData.graphs[4]['chartType'] = 'LineChart';
+		VisualizationData.graphs[4]['options'] = {"titleTextStyle": {"color": "red", "fontSize": "16"}, "tooltip": {"textStyle": {"fontName": "Arial", "fontSize": 10, "color": "black"}, "showColorCode": "true"}, "fontColor": "black", "legend": {"position": "bottom", "alignment": "center"}, "headerHeight": 25, "headerColor": "#d1f9f8", "theme": "material", "curveType": "function", "title": "Company Performance. (Y-axis labels have been modified to display exponent as a superscript)", "hAxis": {"title": "Year"}, "vAxis": {"title": "Performance", "format": "scientific"}};
+		VisualizationData.graphs[4]['data'] = [
+			['Year', 'Sales', 'Expenses'],
+		['2004', 1000, 400],
+		['2005', 1170, 460],
+		['2006', 660, 1120],
+		['2007', 1030, 540],
+
+		];
+
+        VisualizationData.graphs[4].OnReadyHandler = function(){
+            
+            e = document.getElementById(chartHandle[4]);
+            labels = e.getElementsByTagName('text');
+            [...labels].forEach(function(label, i) {
+                label.innerHTML = TransformSuperSub(label.innerHTML);
+                label.innerHTML = TransformScientific(label.innerHTML);
+            })
+        
+            
+        };
+        
+
+		VisualizationData.graphs[5] = {};
+		VisualizationData.graphs[5]['chartType'] = 'BubbleChart';
+		VisualizationData.graphs[5]['options'] = {"titleTextStyle": {"color": "red", "fontSize": "16"}, "tooltip": {"textStyle": {"fontName": "Arial", "fontSize": 10, "color": "black"}, "showColorCode": "true"}, "fontColor": "black", "legend": {"position": "right", "alignment": "top"}, "headerHeight": 25, "headerColor": "#d1f9f8", "theme": "material", "bubble": {"textStyle": {"fontSize": 11}}, "title": "Correlation between life expectancy, fertility rate and population of some world countries (2010)", "hAxis": {"title": "Life Expectancy"}, "vAxis": {"title": "Fertility Rate"}};
+		VisualizationData.graphs[5]['data'] = [
+			['ID', 'Life Expectancy', 'Fertility Rate', 'Region', 'Population'],
+		['CAN', 80.66, 1.67, 'North America', 33739900],
+		['DEU', 79.84, 1.36, 'Europe', 81902307],
+		['DNK', 78.6, 1.84, 'Europe', 5523095],
+		['EGY', 72.73, 2.78, 'Middle East', 79716203],
+		['GBR', 80.05, 2, 'Europe', 61801570],
+		['IRN', 72.49, 1.7, 'Middle East', 73137148],
+		['IRQ', 68.09, 4.77, 'Middle East', 31090763],
+		['ISR', 81.55, 2.96, 'Middle East', 7485600],
+		['RUS', 68.6, 1.54, 'Europe', 141850000],
+		['USA', 78.09, 2.05, 'North America', 307007000],
+
+		];
+
+        VisualizationData.graphs[5].OnReadyHandler = function(){
+            
+            
+        };
+        
+
+
+	</script>
+</body>
+</html>
+		
