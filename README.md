@@ -8,6 +8,18 @@
 ```
 python plot.py
 ```
-See the generated 'results.html' file for the charts.
+or, using pytest:
+```
+pytest
+================================================= test session starts =================================================
+platform win32 -- Python 3.10.4, pytest-7.1.1, pluggy-1.0.0
+rootdir: .\TurboGV
+collected 1 item
+
+test_basic.py .                                                                                                  [100%]
+
+================================================== 1 passed in 0.06s ==================================================
+```
+See the generated 'results.html' file for the charts created by TurboGV.
 
 https://electronicsguy.github.io/TurboGV/
